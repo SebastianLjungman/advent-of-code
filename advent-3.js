@@ -73,22 +73,8 @@
 
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-console.log(stdinBuffer.toString());
 
 const puzzleInput = stdinBuffer.toString();
-
-// const puzzleInput = `00100
-// 11110
-// 10110
-// 10111
-// 10101
-// 01111
-// 00111
-// 11100
-// 10000
-// 11001
-// 00010
-// 01010`;
 const puzzleInputArray = puzzleInput.split('\n').map(String);
 
 function partOne() {
@@ -107,7 +93,6 @@ function partOne() {
             }
         }
     }
-    console.log(bitCountArray)
     bitCountArray.forEach (bitCount => {
         if (bitCount > 0) {
             gammaArray.push(1);
@@ -127,81 +112,55 @@ function partOne() {
     console.log("Power consumption in Part One is: ", gamma*epsilon)
 }
 
-function partTwo () {
+
+function bitCounter(array, bitIndex) {
+    let bitCount = 0;
+    for (let arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
+        if (parseInt(array[arrayIndex][bitIndex]) === 1) {
+            bitCount++;
+        }
+        else {
+            bitCount--;
+        }
+    }
+    return bitCount;
+}
+
+
+function findRating(array, defaultBit, nonDefaultBit) {
+    for (let bitIndex = 0; bitIndex < puzzleInputArray[0].length; bitIndex++) {
+        if(array.length === 1) {
+            break;
+        }
+        let bitCount = 0;
+        let keepBit = defaultBit;
+        bitCount = bitCounter(array, bitIndex);
+        if (bitCount < 0) {
+            keepBit = nonDefaultBit;
+        }
+        for (let arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
+            if (parseInt(array[arrayIndex][bitIndex]) !== keepBit) {
+                array.splice(arrayIndex, 1);
+                arrayIndex--;
+            }
+        }
+    }
+}
+
+function partTwo() {
     let oxygenArray = [...puzzleInputArray];
     let carbonArray = [...puzzleInputArray];
 
-    console.log("------Start------");
-    for (let bitIndex = 0; bitIndex < puzzleInputArray[0].length; bitIndex++) {
-        if(carbonArray.length < 2) {
-            break;
-        }
-        let bitCount = 0;
-        let keepBit = 1;
-        for (let arrayIndex = 0; arrayIndex < oxygenArray.length; arrayIndex++) {
-            //console.log("Bit: ", parseInt(oxygenArray[arrayIndex][bitIndex]));
-            if (parseInt(oxygenArray[arrayIndex][bitIndex]) === 1) {
-                bitCount++;
-            }
-            else {
-                bitCount--;
-            }
-            //console.log("Bitcount: ", bitCount)
-        }
-        if (bitCount < 0) {
-            keepBit = 0;
-        }
-        else if (bitCount > 0) {
-            keepBit = 1;
-        }
-        console.log("----->>>>>Keepbit: ", keepBit);
-        for (let arrayIndex = 0; arrayIndex < oxygenArray.length; arrayIndex++) {
-            //console.log("checking array: ", oxygenArray[arrayIndex], "with bit ", oxygenArray[arrayIndex][bitIndex], "at bitIndex: ", bitIndex)
-            if (parseInt(oxygenArray[arrayIndex][bitIndex]) !== keepBit) {
-                let removed = oxygenArray.splice(arrayIndex, 1);
-                //console.log("Removed: ", removed);
-                arrayIndex--;
-            }
+    findRating(oxygenArray, 1, 0);
+    const oxygenRating = parseInt(oxygenArray.join(""), 2);
+    console.log("Oxygen rating: ", oxygenRating );
 
-        }
-    }
-    console.log("Final oxygen array: ", oxygenArray, "in decmial: ", parseInt(oxygenArray.join(""), 2));
+    findRating(carbonArray, 0, 1);
+    const carbonRating = parseInt(carbonArray.join(""), 2);
+    console.log("Carbon rating: ", carbonRating);
 
-    for (let bitIndex = 0; bitIndex < puzzleInputArray[0].length; bitIndex++) {
-        if(carbonArray.length < 2) {
-            break;
-        }
-        let bitCount = 0;
-        let keepBit = 0;
-        for (let arrayIndex = 0; arrayIndex < carbonArray.length; arrayIndex++) {
-            //console.log("Bit: ", parseInt(carbonArray[arrayIndex][bitIndex]));
-            if (parseInt(carbonArray[arrayIndex][bitIndex]) === 1) {
-                bitCount++;
-            }
-            else {
-                bitCount--;
-            }
-            //console.log("Bitcount: ", bitCount)
-        }
-        if (bitCount < 0) {
-            keepBit = 1;
-        }
-        else if (bitCount > 0) {
-            keepBit = 0;
-        }
-        console.log("----->>>>>Keepbit: ", keepBit);
-        for (let arrayIndex = 0; arrayIndex < carbonArray.length; arrayIndex++) {
-            //console.log("checking array: ", carbonArray[arrayIndex], "with bit ", carbonArray[arrayIndex][bitIndex], "at bitIndex: ", bitIndex)
-            if (parseInt(carbonArray[arrayIndex][bitIndex]) !== keepBit) {
-                let removed = carbonArray.splice(arrayIndex, 1);
-                //console.log("Removed: ", removed);
-                arrayIndex--;
-                //console.log("Current array: ", carbonArray)
-            }
-        }
-    }
-    console.log("Final carbon array: ", carbonArray, "in decmial: ", parseInt(carbonArray.join(""), 2))
+    console.log("Life support rating in Part Two is: ", oxygenRating*carbonRating)
 }
 
-// partOne();
+partOne();
 partTwo();
