@@ -60,5 +60,85 @@
 
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-const puzzleInput = stdinBuffer.toString();
-console.log(puzzleInput);
+const puzzleInput = 
+//`7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
+
+// 22 13 17 11  0
+//  8  2 23  4 24
+// 21  9 14 16  7
+//  6 10  3 18  5
+//  1 12 20 15 19
+
+//  3 15  0  2 22
+//  9 18 13 17  5
+// 19  8  7 25 23
+// 20 11 10 24  4
+// 14 21 16 12  6
+
+//  1  1  1  1  1 
+//  2  2  2  2  2
+//  3  3  3  3  3
+//  4  4  4  4  4
+//  5  5  5  5  5
+
+// 14 21 17 24  4
+// 10 16 15  9 19
+// 18  8 23 26 20
+// 22 11 13  6  5
+//  2  0 12  3  7`
+stdinBuffer.toString();
+const puzzleInputArray: Array<string> = puzzleInput.split('\n').map(String);
+const [drawnNumbers, ... boards] = puzzleInputArray;
+const splitNumbers = drawnNumbers.split(',').map(Number);
+
+let filteredBoards = boards.filter(row => row);
+
+
+function parseBoards(boards: Array<string>): Array<Array<Array<object>>> {
+    let finalBoards: Array<Array<Array<object>>> = [];
+    let oneBoard: Array<Array<object>> = [];
+    // boards = boards.filter
+    let rowOfBoard = 0;
+    for(let row = 0; row < boards.length; row++) {
+        //console.log(`Row ${row} ${boards[row]}`)
+        const splitArray: Array<any> = boards[row].split(' ');
+        var onlyNumbers: Array<string> = splitArray.filter(numberCandidate => numberCandidate);
+        // console.log(onlyNumbers);
+        //finalBoards.push(onlyNumbers);
+        let numberArray: Array<object> = [];
+        onlyNumbers.forEach( boardNumber => {
+            // let number: Number = boardNumber;
+            // console.log("Each is this ", number, typeof number)
+            numberArray.push(
+                {number: parseInt(boardNumber),
+                    marked: false
+                });
+        });
+        
+        oneBoard.push(numberArray);
+        //if(row % 5 === 0 && row !== 0) 
+        rowOfBoard++;
+        if (rowOfBoard === 5){
+            finalBoards.push(oneBoard);
+            oneBoard = [];
+            rowOfBoard = 0;
+        }      
+    }
+    //console.log(finalBoards);
+    return finalBoards;
+}
+
+function markNumbers(drawnNumbers: Array<number>): void {
+    console.log(drawnNumbers);
+} 
+
+function partOne (): void {
+    let parsedBoards = parseBoards(filteredBoards);
+    console.log(parsedBoards)
+    parsedBoards.forEach(board => {
+        console.log("Board: ", board, "with first element: ", board[0][0])
+    });
+    markNumbers(splitNumbers)
+}
+console.log(filteredBoards);
+partOne();
