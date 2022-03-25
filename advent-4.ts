@@ -58,10 +58,20 @@
 
 // To guarantee victory against the giant squid, figure out which board will win first. What will your final score be if you choose that board?
 
+// --- Part Two ---
+
+// On the other hand, it might be wise to try a different strategy: let the giant squid win.
+
+// You aren't sure how many bingo boards a giant squid could play at once, so rather than waste time counting its arms, the safe thing to do is to figure out which board will win last and choose that one. That way, no matter which boards it picks, it will win for sure.
+
+// In the above example, the second board is the last to win, which happens after 13 is eventually called and its middle column is completely marked. If you were to keep playing until this point, the second board would have a sum of unmarked numbers equal to 148 for a final score of 148 * 13 = 1924.
+
+// Figure out which board will win last. Once it wins, what would its final score be?
+
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
 const puzzleInput = 
-//`7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
+// `7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
 
 // 22 13 17 11  0
 //  8  2 23  4 24
@@ -75,17 +85,12 @@ const puzzleInput =
 // 20 11 10 24  4
 // 14 21 16 12  6
 
-//  1  1  1  1  1 
-//  2  2  2  2  2
-//  3  3  3  3  3
-//  4  4  4  4  4
-//  5  5  5  5  5
-
 // 14 21 17 24  4
 // 10 16 15  9 19
 // 18  8 23 26 20
 // 22 11 13  6  5
 //  2  0 12  3  7`
+
 stdinBuffer.toString();
 const puzzleInputArray: Array<string> = puzzleInput.split('\n').map(String);
 const [drawnNumbers, ... boards] = puzzleInputArray;
@@ -93,30 +98,28 @@ const splitNumbers = drawnNumbers.split(',').map(Number);
 
 let filteredBoards = boards.filter(row => row);
 
+interface BingoSquare {
+    squareNumber: number,
+    marked: boolean
+}
 
-function parseBoards(boards: Array<string>): Array<Array<Array<object>>> {
-    let finalBoards: Array<Array<Array<object>>> = [];
-    let oneBoard: Array<Array<object>> = [];
-    // boards = boards.filter
+function parseBoards(boards: Array<string>): Array<Array<Array<BingoSquare>>> {
+    let finalBoards: Array<Array<Array<BingoSquare>>> = [];
+    let oneBoard: Array<Array<BingoSquare>> = [];
     let rowOfBoard = 0;
     for(let row = 0; row < boards.length; row++) {
-        //console.log(`Row ${row} ${boards[row]}`)
         const splitArray: Array<any> = boards[row].split(' ');
         var onlyNumbers: Array<string> = splitArray.filter(numberCandidate => numberCandidate);
-        // console.log(onlyNumbers);
-        //finalBoards.push(onlyNumbers);
-        let numberArray: Array<object> = [];
+        let numberArray: Array<BingoSquare> = [];
         onlyNumbers.forEach( boardNumber => {
-            // let number: Number = boardNumber;
-            // console.log("Each is this ", number, typeof number)
-            numberArray.push(
-                {number: parseInt(boardNumber),
-                    marked: false
-                });
+            const currentSquare: BingoSquare ={
+                squareNumber: parseInt(boardNumber),
+                marked: false
+            }
+            numberArray.push(currentSquare);
         });
         
         oneBoard.push(numberArray);
-        //if(row % 5 === 0 && row !== 0) 
         rowOfBoard++;
         if (rowOfBoard === 5){
             finalBoards.push(oneBoard);
@@ -124,21 +127,86 @@ function parseBoards(boards: Array<string>): Array<Array<Array<object>>> {
             rowOfBoard = 0;
         }      
     }
-    //console.log(finalBoards);
     return finalBoards;
 }
 
-function markNumbers(drawnNumbers: Array<number>): void {
-    console.log(drawnNumbers);
+function numberDraw(drawnNumbers: Array<number>, boards: Array<Array<Array<BingoSquare>>>) {
+    for(let drawnNumber = 0; drawnNumber < drawnNumbers.length; drawnNumber++) {
+        let winningBoard = markNumbers(drawnNumbers[drawnNumber], boards)
+        if(winningBoard) return winningBoard;
+    };
+}
+
+function checkForBingo(board: Array<Array<BingoSquare>>, row: number, column: number): boolean {
+    let markedInRow = 0;
+    let markedInColumn = 0;
+    
+    for(let columnOfRow = 0; columnOfRow < board[row].length; columnOfRow++) {
+        if (board[row][columnOfRow].marked === true) {
+            markedInRow++;
+        }
+    }
+
+    if(markedInRow === 5) {
+        return true;
+    }
+
+    for(let rowOfColumn = 0; rowOfColumn < board.length; rowOfColumn++) {
+        if (board[rowOfColumn][column].marked === true) {
+            markedInColumn++;
+        }
+    }
+
+    if (markedInColumn === 5) {
+        return true;
+    }
+
+    return false;
+}
+
+function markNumbers(drawnNumber: number, boards: Array<Array<Array<BingoSquare>>>): {winningBoard: Array<Array<BingoSquare>>, lastNumber: number} | undefined {
+        for(let board = 0; board < boards.length; board++) {
+            let currentBoard = boards[board];
+            for(let boardRow = 0; boardRow < currentBoard.length; boardRow++) {
+                for(let column = 0; column < currentBoard[boardRow].length; column++) {          
+                    if(currentBoard[boardRow][column].squareNumber === drawnNumber) {
+                        currentBoard[boardRow][column].marked = true;
+                        const isBingo = checkForBingo(currentBoard, boardRow, column)
+                        if(isBingo) {
+                            console.log(currentBoard[boardRow][column].squareNumber)
+                            return {winningBoard:currentBoard, lastNumber: currentBoard[boardRow][column].squareNumber};
+                        }                        
+                    }
+                }
+            }
+        }
 } 
 
-function partOne (): void {
-    let parsedBoards = parseBoards(filteredBoards);
-    console.log(parsedBoards)
-    parsedBoards.forEach(board => {
-        console.log("Board: ", board, "with first element: ", board[0][0])
-    });
-    markNumbers(splitNumbers)
+function calculateScore(winningBoard: Array<Array<BingoSquare>>): number {
+    let sumOfUnmarked = 0;
+    for(let boardRow = 0; boardRow < winningBoard.length; boardRow++) {
+        for(let column = 0; column < winningBoard[boardRow].length; column++) {          
+            if(winningBoard[boardRow][column].marked === false) {
+               sumOfUnmarked += winningBoard[boardRow][column].squareNumber;
+                }                        
+        }        
+    }
+    return sumOfUnmarked;
 }
-console.log(filteredBoards);
+
+function partOne (): void {
+    const parsedBoards = parseBoards(filteredBoards);
+    const winningBoardAndNumber = numberDraw(splitNumbers, parsedBoards);
+    console.log("AND THE WINNER IS: ", winningBoardAndNumber)
+
+    if(winningBoardAndNumber) {
+        const winningScore = calculateScore(winningBoardAndNumber.winningBoard)*winningBoardAndNumber.lastNumber;
+        console.log("With a score of: ", winningScore);
+    }
+    // console.log(parsedBoards)
+    // parsedBoards.forEach(board => {
+    //     console.log("Board: ", board)
+    // });
+    //console.log(drawnNumbers);
+}
 partOne();
