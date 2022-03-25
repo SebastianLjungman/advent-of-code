@@ -94,13 +94,17 @@ const puzzleInput =
 stdinBuffer.toString();
 const puzzleInputArray: Array<string> = puzzleInput.split('\n').map(String);
 const [drawnNumbers, ... boards] = puzzleInputArray;
-const splitNumbers = drawnNumbers.split(',').map(Number);
-
-let filteredBoards = boards.filter(row => row);
+const bingoNumbers = drawnNumbers.split(',').map(Number);
+const bingoBoards = boards.filter(row => row);
 
 interface BingoSquare {
     squareNumber: number,
     marked: boolean
+}
+
+interface WinningBoardAndLastNumber {
+    winningBoard: Array<Array<BingoSquare>>,
+    lastNumber: number
 }
 
 function parseBoards(boards: Array<string>): Array<Array<Array<BingoSquare>>> {
@@ -130,10 +134,10 @@ function parseBoards(boards: Array<string>): Array<Array<Array<BingoSquare>>> {
     return finalBoards;
 }
 
-function numberDraw(drawnNumbers: Array<number>, boards: Array<Array<Array<BingoSquare>>>) {
+function playBingo(drawnNumbers: Array<number>, boards: Array<Array<Array<BingoSquare>>>) {
     for(let drawnNumber = 0; drawnNumber < drawnNumbers.length; drawnNumber++) {
-        let winningBoard = markNumbers(drawnNumbers[drawnNumber], boards)
-        if(winningBoard) return winningBoard;
+        const winningBoardsAndNumbers = markNumbers(drawnNumbers[drawnNumber], boards);
+        if(winningBoardsAndNumbers) return winningBoardsAndNumbers[0];
     };
 }
 
@@ -164,22 +168,27 @@ function checkForBingo(board: Array<Array<BingoSquare>>, row: number, column: nu
     return false;
 }
 
-function markNumbers(drawnNumber: number, boards: Array<Array<Array<BingoSquare>>>): {winningBoard: Array<Array<BingoSquare>>, lastNumber: number} | undefined {
-        for(let board = 0; board < boards.length; board++) {
-            let currentBoard = boards[board];
-            for(let boardRow = 0; boardRow < currentBoard.length; boardRow++) {
-                for(let column = 0; column < currentBoard[boardRow].length; column++) {          
-                    if(currentBoard[boardRow][column].squareNumber === drawnNumber) {
-                        currentBoard[boardRow][column].marked = true;
-                        const isBingo = checkForBingo(currentBoard, boardRow, column)
-                        if(isBingo) {
-                            console.log(currentBoard[boardRow][column].squareNumber)
-                            return {winningBoard:currentBoard, lastNumber: currentBoard[boardRow][column].squareNumber};
-                        }                        
-                    }
+function markNumbers(drawnNumber: number, boards: Array<Array<Array<BingoSquare>>>): Array <WinningBoardAndLastNumber> | undefined {
+    let bingoWinners: Array <WinningBoardAndLastNumber> = [];
+    for(let board = 0; board < boards.length; board++) {
+        let currentBoard = boards[board];
+        for(let boardRow = 0; boardRow < currentBoard.length; boardRow++) {
+            for(let column = 0; column < currentBoard[boardRow].length; column++) {          
+                if(currentBoard[boardRow][column].squareNumber === drawnNumber) {
+                    currentBoard[boardRow][column].marked = true;
+                    const isBingo = checkForBingo(currentBoard, boardRow, column)
+                    if(isBingo) {
+                        bingoWinners.push({winningBoard: currentBoard, lastNumber: drawnNumber});       
+                        boards.splice(board, 1);   
+                        board--;             
+                    }                                               
                 }
             }
         }
+    }
+    if(bingoWinners.length > 0) {
+        return bingoWinners;
+    }
 } 
 
 function calculateScore(winningBoard: Array<Array<BingoSquare>>): number {
@@ -194,19 +203,38 @@ function calculateScore(winningBoard: Array<Array<BingoSquare>>): number {
     return sumOfUnmarked;
 }
 
-function partOne (): void {
-    const parsedBoards = parseBoards(filteredBoards);
-    const winningBoardAndNumber = numberDraw(splitNumbers, parsedBoards);
+function playBingoLastWinner(drawnNumbers: Array<number>, boards: Array<Array<Array<BingoSquare>>>): WinningBoardAndLastNumber {
+    let allWinningBoardsAndLastNumbers: Array<WinningBoardAndLastNumber> = [];
+    for(let drawnNumber = 0; drawnNumber < drawnNumbers.length; drawnNumber++) {
+        const winningBoardsAndNumbers = markNumbers(drawnNumbers[drawnNumber], boards)
+        if(winningBoardsAndNumbers) {
+            allWinningBoardsAndLastNumbers.push(... winningBoardsAndNumbers);
+        }
+    };
+    return allWinningBoardsAndLastNumbers[allWinningBoardsAndLastNumbers.length-1];
+}
+
+
+function partOne(): void {
+    const parsedBoards = parseBoards(bingoBoards);
+    const winningBoardAndNumber = playBingo(bingoNumbers, parsedBoards);
     console.log("AND THE WINNER IS: ", winningBoardAndNumber)
 
     if(winningBoardAndNumber) {
         const winningScore = calculateScore(winningBoardAndNumber.winningBoard)*winningBoardAndNumber.lastNumber;
         console.log("With a score of: ", winningScore);
     }
-    // console.log(parsedBoards)
-    // parsedBoards.forEach(board => {
-    //     console.log("Board: ", board)
-    // });
-    //console.log(drawnNumbers);
 }
+
+function partTwo(): void {
+    const parsedBoards = parseBoards(bingoBoards);
+    const lastWinningBoardAndNumber = playBingoLastWinner(bingoNumbers, parsedBoards);
+    console.log("AND THE LAST WINNER IS: ", lastWinningBoardAndNumber)
+    if(lastWinningBoardAndNumber) {
+        const winningScore = calculateScore(lastWinningBoardAndNumber.winningBoard)*lastWinningBoardAndNumber.lastNumber;
+        console.log("With a score of: ", winningScore);
+    }
+}
+
 partOne();
+partTwo();
