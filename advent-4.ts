@@ -97,7 +97,7 @@ function parseBoards(boards: Array<string>): Array<Array<Array<BingoSquare>>> {
     for(let row = 0; row < boards.length; row++) {
         const splitArray: Array<any> = boards[row].split(' ');
         //Filters out blank spaces before single digit numbers
-        var onlyNumbers: Array<string> = splitArray.filter(numberCandidate => numberCandidate);
+        const onlyNumbers: Array<string> = splitArray.filter(numberCandidate => numberCandidate);
         let numberArray: Array<BingoSquare> = [];
         onlyNumbers.forEach( boardNumber => {
             const currentSquare: BingoSquare ={
