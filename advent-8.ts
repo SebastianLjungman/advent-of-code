@@ -70,6 +70,8 @@
 
 // In the output values, how many times do digits 1, 4, 7, or 8 appear?
 
+// Your puzzle answer was 352.
+
 // --- Part Two ---
 
 // Through a little deduction, you should now be able to determine the remaining digits. Consider again the first example above:
@@ -126,26 +128,12 @@
 
 // For each entry, determine all of the wire/segment connections and decode the four-digit output values. What do you get if you add up all of the output values?
 
+// Your puzzle answer was 936117.
+
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-const puzzleInput8 = 
-//`acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf`
-
-`be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
-edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
-fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
-fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb
-aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea
-fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf | gebdcfa ecba ca fadegcb
-dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbcadfe
-bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef
-egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb
-gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce`
-
-//stdinBuffer.toString();
-
-
-let puzzleInputArray8: Array<string> = puzzleInput8.split('\n').map(String);
+const puzzleInput8 = stdinBuffer.toString();
+const puzzleInputArray8: Array<string> = puzzleInput8.split('\n').map(String);
 
 function segmentsInCommon(characterCode1: string, characterCode2: string): number {
     let segmentsInCommonCounter = 0;
@@ -155,8 +143,7 @@ function segmentsInCommon(characterCode1: string, characterCode2: string): numbe
                 segmentsInCommonCounter++;
             }
         }
-    }
-    
+    }  
     return segmentsInCommonCounter;
 } 
 
@@ -166,11 +153,8 @@ function partOne8(): void {
 
     puzzleInputArray8.forEach(row => {
         const [signalPattern, outputValue] = row.split(' | ');
-        console.log(outputValue);
         outputValues.push(outputValue.split(' '));
     });
-
-    console.log(outputValues);
 
     for(let outputValueIndex = 0; outputValueIndex < outputValues.length; outputValueIndex++) {
         for(let digitIndex = 0; digitIndex < outputValues[outputValueIndex].length; digitIndex++) {
@@ -199,17 +183,16 @@ function partOne8(): void {
 function partTwo8(): void {
     const outputValues: Array<Array<string>> = []; 
     const signalPatterns: Array<Array<string>> = [];
+    let translatedOutputsSum = 0;
     puzzleInputArray8.forEach(row => {
         const [signalPattern, outputValue] = row.split(' | ');
         outputValues.push(outputValue.split(' '));
         signalPatterns.push(signalPattern.split(' '));
     });
-    console.log(signalPatterns);
     for(let signalPatternIndex = 0; signalPatternIndex < signalPatterns.length; signalPatternIndex++) {
         let digitSegments: Array<string> = Array(9);
         //First loop to establish the segments for "easy digits"
         for(let digitIndex = 0; digitIndex < signalPatterns[signalPatternIndex].length; digitIndex++) {
-            console.log(signalPatterns[signalPatternIndex][digitIndex])
             switch (signalPatterns[signalPatternIndex][digitIndex].length) {
                 case 2:
                     digitSegments[1] = signalPatterns[signalPatternIndex][digitIndex];
@@ -226,28 +209,11 @@ function partTwo8(): void {
                 default:
                     //Do nothing
             }
-            console.log(`For entry ${signalPatternIndex} 1 = ${digitSegments[1]}, 4 = ${digitSegments[4]}, 7 = ${digitSegments[7]}, 8 = ${digitSegments[8]}`);
         }
         //Second loop to infer the segments for "difficult digits" from the "easy digits"
         for(let digitIndex = 0; digitIndex < signalPatterns[signalPatternIndex].length; digitIndex++) {
             switch (signalPatterns[signalPatternIndex][digitIndex].length) {
                 case 5:
-                //COMPARE TO 1, 4 OR 7 
-                console.log("Is either 2, 3 or 5");
-                //2 has 1 segments in common with 1
-                //3 has 2 segment in common with 1
-                //5 has 1 segments in common with 1 
-                //COMPARE WITH 1 TO GET 3
-
-                //2 has 2 segments in common with 4
-                //3 has 3 segment in common with 4
-                //5 has 3 segments in common with 4 
-                //COMPARE WITH 4 TO GET 2
-
-                //2 has 2 segments in common with 7
-                //3 has 3 segment in common with 7
-                //5 has 2 segments in common with 7 
-                //ELSE FROM EARLIER COMPARISONS TO GET 5
                 if(segmentsInCommon(signalPatterns[signalPatternIndex][digitIndex], digitSegments[1]) === 2) {
                     digitSegments[3] = signalPatterns[signalPatternIndex][digitIndex];
                 }
@@ -259,21 +225,6 @@ function partTwo8(): void {
                 }
                 break;
             case 6: 
-                console.log("Is either 0, 6 or 9")
-                //0 has 2 segments in common with 1 
-                //6 has 1 segment in common with 1
-                //9 has 2 segments in common with 1            
-                //COMPARE WITH 1 TO GET 6
-
-                //0 has 3 segments in common with 4
-                //6 has 3 segments in common with 4             
-                //9 has 4 segments in common with 4
-                //COMPARE WITH 4 TO GET 9
-
-                //0 has 3 segments in common with 7
-                //6 has 2 segments in common with 7
-                //9 has 3 segments in common with 7
-                //ELSE FROM EARLIER COMPARISONS TO GET 0
                 if(segmentsInCommon(signalPatterns[signalPatternIndex][digitIndex], digitSegments[1]) === 1) {
                     digitSegments[6] = signalPatterns[signalPatternIndex][digitIndex];
                 }
@@ -287,50 +238,56 @@ function partTwo8(): void {
             default:
                 //Do nothing
             }
-            for(let digit = 0; digit < digitSegments.length; digit++) {
-                console.log(digit," is represented by: ", digitSegments[digit]);
-            }
         }
+        let translatedString = "";
+        outputValues[signalPatternIndex].forEach(outputDigit => {
+            for(let digitIndex = 0; digitIndex < digitSegments.length; digitIndex++) {
+                if(outputDigit.length === digitSegments[digitIndex].length && segmentsInCommon(outputDigit, digitSegments[digitIndex]) === outputDigit.length) {
+                    translatedString += digitIndex;
+                    break;
+                } 
+            };
+        })
+        translatedOutputsSum += parseInt(translatedString);
     }
+    console.log("Sum of output values: ", translatedOutputsSum)
 }
 
-//partOne8();
+partOne8();
 partTwo8();
 
+//Notes on the logic for partTwo8 "difficult digits" loop 
 
+//COMPARE DIFFICULT DIGIT TO 1, 4 OR 7
 
-//case 5:
-    //COMPARE TO 1, 4 OR 7 
-    //console.log("Is either 2, 3 or 5");
-    //2 has 1 segments in common with 1
-    //3 has 2 segment in common with 1
-    //5 has 1 segments in common with 1 
-    //COMPARE WITH 1 TO GET 3
+//When number of segments is 5, the digit is either 2, 3 or 5
+//2 has 1 segments in common with 1
+//3 has 2 segment in common with 1
+//5 has 1 segments in common with 1 
+//COMPARE WITH 1 TO GET 3
 
-    //2 has 2 segments in common with 4
-    //3 has 3 segment in common with 4
-    //5 has 3 segments in common with 4 
-    //COMPARE WITH 4 TO GET 2
+//2 has 2 segments in common with 4
+//3 has 3 segment in common with 4
+//5 has 3 segments in common with 4 
+//COMPARE WITH 4 TO GET 2
 
-    //2 has 2 segments in common with 7
-    //3 has 3 segment in common with 7
-    //5 has 2 segments in common with 7 
-    //ELSE FROM EARLIER COMPARISONS TO GET 5
-//     break;
-// case 6: 
-//     console.log("Is either 0, 6 or 9")
-    //9 has 2 segments in common with 1
-    //6 has 1 segment in common with 1
-    //0 has 2 segments in common with 1 
-    //COMPARE WITH 1 TO GET 6
+//2 has 2 segments in common with 7
+//3 has 3 segment in common with 7
+//5 has 2 segments in common with 7 
+//ELSE FROM EARLIER COMPARISONS TO GET 5
 
-    //9 has 4 segments in common with 4, 
-    //6 has 3 segments in common with 4, 
-    //0 has 3 segments in common with 4
-    //COMPARE WITH 4 TO GET 9
+//When number of segments i 6, the digit is either 6, 9 or 0
+//0 has 2 segments in common with 1 
+//6 has 1 segment in common with 1
+//9 has 2 segments in common with 1            
+//COMPARE WITH 1 TO GET 6
 
-    //9 has 3 segments in common with 7
-    //6 has 2 segments in common with 7
-    //0 has 3 segments in common with 7
-    //ELSE FROM EARLIER COMPARISONS TO GET 0
-    // break;
+//0 has 3 segments in common with 4
+//6 has 3 segments in common with 4             
+//9 has 4 segments in common with 4
+//COMPARE WITH 4 TO GET 9
+
+//0 has 3 segments in common with 7
+//6 has 2 segments in common with 7
+//9 has 3 segments in common with 7
+//ELSE FROM EARLIER COMPARISONS TO GET 0
