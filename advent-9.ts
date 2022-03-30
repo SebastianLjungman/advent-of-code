@@ -122,7 +122,7 @@ function partTwo9(): void {
     let basinSizes: Array<number> = [];
     for (let row = 0; row < heightmap.length; row++) {
         for(let column = 0; column < heightmap[row].length; column++) {
-            if(heightmap[row][column] !== 9) {   
+            if(!(heightmap[row][column] >= 9)) {   
                 const basinSize = checkNeighbors(column, row, 0)
                 basinSizes.push(basinSize);
             }
