@@ -22,44 +22,115 @@
 
 // Find all of the low points on your heightmap. What is the sum of the risk levels of all low points on your heightmap?
 
-var fs = require("fs");
-var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-const puzzleInput9 = 
-// `2199943210
+// Your puzzle answer was 475.
+
+// --- Part Two ---
+
+// Next, you need to find the largest basins so you know what areas are most important to avoid.
+
+// A basin is all locations that eventually flow downward to a single low point. Therefore, every low point has a basin, although some basins are very small. Locations of height 9 do not count as being in any basin, and all other locations will always be part of exactly one basin.
+
+// The size of a basin is the number of locations within the basin, including the low point. The example above has four basins.
+
+// The top-left basin, size 3:
+
+// 2199943210
 // 3987894921
 // 9856789892
 // 8767896789
-// 9899965678`
+// 9899965678
 
-stdinBuffer.toString();
+// The top-right basin, size 9:
+
+// 2199943210
+// 3987894921
+// 9856789892
+// 8767896789
+// 9899965678
+
+// The middle basin, size 14:
+
+// 2199943210
+// 3987894921
+// 9856789892
+// 8767896789
+// 9899965678
+
+// The bottom-right basin, size 9:
+
+// 2199943210
+// 3987894921
+// 9856789892
+// 8767896789
+// 9899965678
+
+// Find the three largest basins and multiply their sizes together. In the above example, this is 9 * 14 * 9 = 1134.
+
+// What do you get if you multiply together the sizes of the three largest basins?
+
+// Your puzzle answer was 1092012.
+
+var fs = require("fs");
+var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
+const puzzleInput9 = stdinBuffer.toString();
 let puzzleInputArray9: Array<String> = puzzleInput9.split('\n').map(String);
 let heightmap: Array<Array<number>> =  [];
+
 for (let row = 0; row < puzzleInputArray9.length; row++) {
     let numberRow = [];
-    for(let numberIndex = 0; numberIndex < puzzleInputArray9[row].length; numberIndex++) {
-        numberRow.push(parseInt(puzzleInputArray9[row][numberIndex]));
+    for(let column = 0; column < puzzleInputArray9[row].length; column++) {
+        numberRow.push(parseInt(puzzleInputArray9[row][column]));
     }
     heightmap.push(numberRow);
 }
 
-console.log(heightmap);
+function checkNeighbors(column: number, row: number, acc: number): number {
+    if(typeof heightmap[row] === 'undefined' || (typeof heightmap[row][column] === 'undefined') || heightmap[row][column] >= 9) {
+        return 0;
+    }
+    else {
+        //Marks a position as visited by setting the height to infinity
+        heightmap[row][column] = Number.POSITIVE_INFINITY;
+        acc++;
+        acc += checkNeighbors(column-1, row, 0);
+        acc += checkNeighbors(column+1, row, 0);
+        acc += checkNeighbors(column, row-1, 0);
+        acc += checkNeighbors(column, row+1, 0);
+        return acc;
+    }
+}
 
 function partOne9(): void {
     let lowPoints: Array<number> = [];
     for (let row = 0; row < heightmap.length; row++) {
-        for(let numberIndex = 0; numberIndex < heightmap[row].length; numberIndex++) {
+        for(let column = 0; column < heightmap[row].length; column++) {
             if(
-            ((typeof heightmap[row-1] === 'undefined') || heightmap[row-1][numberIndex] > heightmap[row][numberIndex])  &&
-            ((typeof heightmap[row+1] === 'undefined') || heightmap[row+1][numberIndex] > heightmap[row][numberIndex])  &&
-            ((typeof heightmap[row][numberIndex-1] === 'undefined') || heightmap[row][numberIndex-1] > heightmap[row][numberIndex])  &&
-            ((typeof heightmap[row][numberIndex+1] === 'undefined') || heightmap[row][numberIndex+1] > heightmap[row][numberIndex])    
+            ((typeof heightmap[row-1] === 'undefined') || heightmap[row-1][column] > heightmap[row][column])  &&
+            ((typeof heightmap[row+1] === 'undefined') || heightmap[row+1][column] > heightmap[row][column])  &&
+            ((typeof heightmap[row][column-1] === 'undefined') || heightmap[row][column-1] > heightmap[row][column])  &&
+            ((typeof heightmap[row][column+1] === 'undefined') || heightmap[row][column+1] > heightmap[row][column])    
             ) {
-                lowPoints.push(heightmap[row][numberIndex])
+                lowPoints.push(heightmap[row][column])
             }
         }
     }
     const riskLevel = lowPoints.reduce((a, b) => a + b) + lowPoints.length;
-    console.log(riskLevel);
+    console.log("Sum of risk levels of low points: ", riskLevel);
+}
+
+function partTwo9(): void {
+    let basinSizes: Array<number> = [];
+    for (let row = 0; row < heightmap.length; row++) {
+        for(let column = 0; column < heightmap[row].length; column++) {
+            if(heightmap[row][column] !== 9) {   
+                const basinSize = checkNeighbors(column, row, 0)
+                basinSizes.push(basinSize);
+            }
+        }
+    }
+    const sortedBasins = basinSizes.sort((a, b) => b-a);
+    console.log("Three biggest basins product: ", sortedBasins[0]*sortedBasins[1]*sortedBasins[2]);
 }
 
 partOne9();
+partTwo9();
