@@ -110,7 +110,7 @@ function partOne9(): void {
             ((typeof heightmap[row][column-1] === 'undefined') || heightmap[row][column-1] > heightmap[row][column])  &&
             ((typeof heightmap[row][column+1] === 'undefined') || heightmap[row][column+1] > heightmap[row][column])    
             ) {
-                lowPoints.push(heightmap[row][column])
+                lowPoints.push(heightmap[row][column]);
             }
         }
     }
