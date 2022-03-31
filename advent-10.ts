@@ -151,38 +151,38 @@ function illegalCharacterScore(character: string): number {
     }
 }
 
-function manageQueue(character: string, missingCharacterQueue: Array<string>) {
+function manageMissingCharacterStack(character: string, missingCharacterStack: Array<string>) {
     switch (character) {
         case "(":
-            missingCharacterQueue.push(")");
+            missingCharacterStack.push(")");
             break;
         case "[":
-            missingCharacterQueue.push("]");
+            missingCharacterStack.push("]");
             break;
         case "{":
-            missingCharacterQueue.push("}");
+            missingCharacterStack.push("}");
             break;
         case "<":
-            missingCharacterQueue.push(">");
+            missingCharacterStack.push(">");
             break;
         case ")":
-            if(")" === missingCharacterQueue[missingCharacterQueue.length-1]) {
-                missingCharacterQueue.pop()
+            if(character === missingCharacterStack[missingCharacterStack.length-1]) {
+                missingCharacterStack.pop()
             }
             break;
         case "]":
-            if("]" === missingCharacterQueue[missingCharacterQueue.length-1]) {
-                missingCharacterQueue.pop()
+            if(character === missingCharacterStack[missingCharacterStack.length-1]) {
+                missingCharacterStack.pop()
             }
             break;
         case "}":
-            if("}" === missingCharacterQueue[missingCharacterQueue.length-1]) {
-                missingCharacterQueue.pop()
+            if(character === missingCharacterStack[missingCharacterStack.length-1]) {
+                missingCharacterStack.pop()
             }
             break;
         case ">":
-            if(">" === missingCharacterQueue[missingCharacterQueue.length-1]) {
-                missingCharacterQueue.pop()
+            if(character === missingCharacterStack[missingCharacterStack.length-1]) {
+                missingCharacterStack.pop()
             }
             break;
         default:
@@ -212,8 +212,8 @@ function partOne10(): void {
     for(let row = 0; row < puzzleInputArray10.length; row++) {
         for(let column = 0; column < puzzleInputArray10[row].length; column++) {
             const character = puzzleInputArray10[row][column];
-            const isLegal =  checkIfCharacterIsLegal(character, characterStack);
-            if(!isLegal) {
+            const characterIsLegal = checkIfCharacterIsLegal(character, characterStack);
+            if(!characterIsLegal) {
                 illegalCharacterScores.push(illegalCharacterScore(character));
                 break;
             }
@@ -228,24 +228,26 @@ function partTwo10(): void {
     let allScores: Array<number> = [];
 
     for(let row = 0; row < puzzleInputArray10.length; row++) {
-        const missingCharacterQueue: Array<string> = [];
-        let isLegal = false;
+        const missingCharacterStack: Array<string> = [];
+        let characterIsLegal = false;
 
         for(let column = 0; column < puzzleInputArray10[row].length; column++) {
             const character = puzzleInputArray10[row][column];
-            isLegal =  checkIfCharacterIsLegal(character, characterStack);
-            if(isLegal) {
-               manageQueue(character, missingCharacterQueue);
+            characterIsLegal = checkIfCharacterIsLegal(character, characterStack);
+            
+            if(characterIsLegal) {
+                manageMissingCharacterStack(character, missingCharacterStack);
             }
             else {
                 break;
             }
         }
-        if(isLegal) {
+        if(characterIsLegal) {
             let rowScore = 0;
-            for(let missingCharacter = missingCharacterQueue.length-1; missingCharacter >= 0; missingCharacter--) {
+            
+            for(let missingCharacter = missingCharacterStack.length-1; missingCharacter >= 0; missingCharacter--) {
                 rowScore *= 5;
-                rowScore += autocompleteScore(missingCharacterQueue[missingCharacter]);
+                rowScore += autocompleteScore(missingCharacterStack[missingCharacter]);
             }
 
             allScores.push(rowScore);
