@@ -84,7 +84,7 @@ for (let row = 0; row < puzzleInputArray9.length; row++) {
     heightmap.push(numberRow);
 }
 
-function checkNeighbors(column: number, row: number, acc: number): number {
+function checkNeighbors(row: number, column: number, acc: number): number {
     if(typeof heightmap[row] === 'undefined' || (typeof heightmap[row][column] === 'undefined') || heightmap[row][column] >= 9) {
         return 0;
     }
@@ -92,10 +92,10 @@ function checkNeighbors(column: number, row: number, acc: number): number {
         //Marks a position as visited by setting the height to infinity
         heightmap[row][column] = Number.POSITIVE_INFINITY;
         acc++;
-        acc += checkNeighbors(column-1, row, 0);
-        acc += checkNeighbors(column+1, row, 0);
-        acc += checkNeighbors(column, row-1, 0);
-        acc += checkNeighbors(column, row+1, 0);
+        acc += checkNeighbors(row-1, column, 0);
+        acc += checkNeighbors(row+1, column, 0);
+        acc += checkNeighbors(row, column-1, 0);
+        acc += checkNeighbors(row, column+1, 0);
         return acc;
     }
 }
@@ -123,7 +123,7 @@ function partTwo9(): void {
     for (let row = 0; row < heightmap.length; row++) {
         for(let column = 0; column < heightmap[row].length; column++) {
             if(!(heightmap[row][column] >= 9)) {   
-                const basinSize = checkNeighbors(column, row, 0)
+                const basinSize = checkNeighbors(row, column, 0)
                 basinSizes.push(basinSize);
             }
         }
