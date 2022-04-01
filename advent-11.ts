@@ -298,31 +298,61 @@
 
 // Given the starting energy levels of the dumbo octopuses in your cavern, simulate 100 steps. How many total flashes are there after 100 steps?
 
+// Your puzzle answer was 1655.
+
+// --- Part Two ---
+
+// It seems like the individual flashes aren't bright enough to navigate. However, you might have a better option: the flashes seem to be synchronizing!
+
+// In the example above, the first time all octopuses flash simultaneously is step 195:
+
+// After step 193:
+// 5877777777
+// 8877777777
+// 7777777777
+// 7777777777
+// 7777777777
+// 7777777777
+// 7777777777
+// 7777777777
+// 7777777777
+// 7777777777
+
+// After step 194:
+// 6988888888
+// 9988888888
+// 8888888888
+// 8888888888
+// 8888888888
+// 8888888888
+// 8888888888
+// 8888888888
+// 8888888888
+// 8888888888
+
+// After step 195:
+// 0000000000
+// 0000000000
+// 0000000000
+// 0000000000
+// 0000000000
+// 0000000000
+// 0000000000
+// 0000000000
+// 0000000000
+// 0000000000
+
+// If you can calculate the exact moments when the octopuses will all flash simultaneously, you should be able to navigate through the cavern. What is the first step during which all octopuses flash?
+
+// Your puzzle answer was 337.
+
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-const puzzleInput11 = 
-// `11111
-// 19991
-// 19191
-// 19991
-// 11111`
-
-// `5483143223
-// 2745854711
-// 5264556173
-// 6141336146
-// 6357385478
-// 4167524645
-// 2176841721
-// 6882881134
-// 4846848554
-// 5283751526`
-
-stdinBuffer.toString();
+const puzzleInput11 = stdinBuffer.toString();
 
 
 const puzzleInputArray11: Array<String> = puzzleInput11.split('\n').map(String);
-let octopusMap: Array<Array<number>> = [];
+const octopusMap: Array<Array<number>> = [];
 
 for (let row = 0; row < puzzleInputArray11.length; row++) {
     let numberRow = [];
@@ -332,9 +362,7 @@ for (let row = 0; row < puzzleInputArray11.length; row++) {
     octopusMap.push(numberRow);
 }
 
-console.log(octopusMap)
-
-function checkNeighboringOctopuses(row: number, column: number, acc: number): number {
+function checkNeighboringOctopuses(row: number, column: number, acc: number, octopusMap: Array<Array<number>>): number {
     if(typeof octopusMap[row] === 'undefined' || (typeof octopusMap[row][column] === 'undefined') || octopusMap[row][column] === 0) {
         return 0;
     }
@@ -343,15 +371,15 @@ function checkNeighboringOctopuses(row: number, column: number, acc: number): nu
         if(octopusMap[row][column] > 9) {
             octopusMap[row][column] = 0;
             acc++;
-            acc += checkNeighboringOctopuses(row, column-1, 0);
-            acc += checkNeighboringOctopuses(row, column+1, 0);
-            acc += checkNeighboringOctopuses(row-1, column, 0);
-            acc += checkNeighboringOctopuses(row+1, column, 0);           
+            acc += checkNeighboringOctopuses(row, column-1, 0, octopusMap);
+            acc += checkNeighboringOctopuses(row, column+1, 0, octopusMap);
+            acc += checkNeighboringOctopuses(row-1, column, 0, octopusMap);
+            acc += checkNeighboringOctopuses(row+1, column, 0, octopusMap);           
 
-            acc += checkNeighboringOctopuses(row-1, column-1, 0);
-            acc += checkNeighboringOctopuses(row+1, column+1, 0);
-            acc += checkNeighboringOctopuses(row-1, column+1, 0);
-            acc += checkNeighboringOctopuses(row+1, column-1, 0);
+            acc += checkNeighboringOctopuses(row-1, column-1, 0, octopusMap);
+            acc += checkNeighboringOctopuses(row+1, column+1, 0, octopusMap);
+            acc += checkNeighboringOctopuses(row-1, column+1, 0, octopusMap);
+            acc += checkNeighboringOctopuses(row+1, column-1, 0, octopusMap);
         }
     }
     return acc;
@@ -359,18 +387,19 @@ function checkNeighboringOctopuses(row: number, column: number, acc: number): nu
 
 
 function partOne11(): void {
+    const octopusMapCopy= octopusMap.map(row => row.slice());
     let totalFlashes: number = 0;
     const totalSteps = 100;
     for (let step = 0; step < totalSteps; step++) {     
-        for (let row = 0; row < octopusMap.length; row++) {
-            for(let column = 0; column < octopusMap[row].length; column++) {                    
-                octopusMap[row][column]++;
+        for (let row = 0; row < octopusMapCopy.length; row++) {
+            for(let column = 0; column < octopusMapCopy[row].length; column++) {                    
+                octopusMapCopy[row][column]++;
             }
         }
-        for (let row = 0; row < octopusMap.length; row++) {
-            for(let column = 0; column < octopusMap[row].length; column++) {                    
-                if(octopusMap[row][column] > 9) {
-                    totalFlashes += checkNeighboringOctopuses(row, column, 0);
+        for (let row = 0; row < octopusMapCopy.length; row++) {
+            for(let column = 0; column < octopusMapCopy[row].length; column++) {                    
+                if(octopusMapCopy[row][column] > 9) {
+                    totalFlashes += checkNeighboringOctopuses(row, column, 0, octopusMapCopy);
                 }    
             }
         }
@@ -379,4 +408,32 @@ function partOne11(): void {
     console.log(`Total flashes after ${totalSteps} steps: ${totalFlashes}`);
 }
 
+function partTwo11(): void {
+    const octopusMapCopy = octopusMap.map(row => row.slice());
+    let stepsSoFar = 0;
+    let noSynchedFlash = true;
+    while(noSynchedFlash) {  
+        stepsSoFar++;
+        let flashedThisStep = 0;   
+        for (let row = 0; row < octopusMapCopy.length; row++) {
+            for(let column = 0; column < octopusMapCopy[row].length; column++) {                    
+                octopusMapCopy[row][column]++;
+            }
+        }
+        for (let row = 0; row < octopusMapCopy.length; row++) {
+            for(let column = 0; column < octopusMapCopy[row].length; column++) {                    
+                if(octopusMapCopy[row][column] > 9) {
+                    flashedThisStep += checkNeighboringOctopuses(row, column, 0, octopusMapCopy)
+                } 
+            }
+        }
+        if(flashedThisStep === octopusMapCopy.length*octopusMapCopy[0].length) {
+            break;
+        }
+    }
+
+    console.log(`Synched flash happened at step ${stepsSoFar}`);
+}
+
 partOne11();
+partTwo11();
