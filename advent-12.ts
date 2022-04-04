@@ -101,14 +101,14 @@
 
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-const puzzleInput12 = //
-`start-A
-start-b
-A-c
-A-b
-b-d
-A-end
-b-end`
+const puzzleInput12 =
+// `start-A
+// start-b
+// A-c
+// A-b
+// b-d
+// A-end
+// b-end`
 
 stdinBuffer.toString();
 
@@ -117,36 +117,17 @@ interface Edge {
     to: string,
 }
 
-// interface Vertex {
-//     // name: string,
-//     visited: boolean,
-//     neighbors: Array<Vertex> 
-// }
-
-// interface VertexDictionary {
-//     [key: string]: Vertex;
-// }
-
 interface VertexDictionary {
     [key: string]: Array<string>;
 }
 
 const puzzleInputArray12: Array<String> = puzzleInput12.split('\n').map(String);
-
-//console.log(puzzleInputArray12);
-
 const graphEdges: Array<Edge> = [];
 
 puzzleInputArray12.forEach(edge => {
     const [from, to] = edge.split('-');
-    //console.log("From: ", from, "To: ", to);
     graphEdges.push({from: from, to: to});
-    // if(from != "start" && from != "end" && to != "start" && to != "end") {
-    //     graphEdges.push({from: to, to: from});
-    // }
 })
-
-//console.log(graphEdges);
 
 const verticesList: VertexDictionary = {};
 const pathsToEnd: Array<Array<string>> = [];
@@ -164,17 +145,22 @@ graphEdges.forEach(edge => {
 
 console.log(verticesList)
 
-function checkNeighboringVertices(vertex: string, pastTrace: Array<string>) {
+function checkNeighboringVertices(vertex: string, pastTrace: Array<string>, pastVisited: Array<string>) {
     const trace: Array<string> = Array.from(pastTrace);
     trace.push(vertex);
     console.log("Trace: ", trace);
 
     if(vertex === "end") {
+        console.log("Pushed path: ", trace);
         pathsToEnd.push(trace);
         return;
     }
 
-    const visited: Array<string> = Array.from(trace);
+    const visited: Array<string> = Array.from(pastVisited);
+
+    if(vertex.charCodeAt(0) > 96) {
+        visited.push(vertex);
+    }
     const vertexStack: Array<string> = [];
 
     verticesList[vertex].forEach( neighbor => {
@@ -189,37 +175,19 @@ function checkNeighboringVertices(vertex: string, pastTrace: Array<string>) {
     while(vertexStack.length > 0) {    
         const next = vertexStack.pop();
         console.log("Popped: ", next)
-        if(next) {
-            console.log(next, " is visited: ", visited.includes(next));
-            if(!visited.includes(next)){ 
-                checkNeighboringVertices(next, trace);
-                visited.push(next);
-            }
-        }
-        else {
-            console.log("dead end at: ", next)
+        if(next && !visited.includes(next)) {
+            console.log(next, " is visited: ", pastTrace.includes(next));
+            checkNeighboringVertices(next, trace, visited);
+            console.log("CHar code of ", next, "Is: ", next.charCodeAt(0))
         }
     }
-    
-    // while(vertexStack.length > 0) {
-    //     console.log("recurse")
-    //     const next = vertexStack.pop();
-    //     console.log("Popped: ", next)
-    //     console.log("Stack: ", vertexStack);
-    //     if(next) {
-    //        checkNeighboringVertices(next, trace); 
-    //     }
-    // }
 }
 
 
 
 function partOne12(): void {
-    const root = "start";
-    const trace: Array<string> = [];
-    checkNeighboringVertices(root, trace);
-
-    console.log("Found paths: ", pathsToEnd);
+    checkNeighboringVertices("start", [], []);
+    console.log("Found paths: ", pathsToEnd, "Paths in total: ", pathsToEnd.length);
 }
 
 partOne12();
