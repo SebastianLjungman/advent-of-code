@@ -99,18 +99,60 @@
 
 // How many paths through this cave system are there that visit small caves at most once?
 
+// Your puzzle answer was 3576.
+
+// --- Part Two ---
+
+// After reviewing the available paths, you realize you might have time to visit a single small cave twice. Specifically, big caves can be visited any number of times, a single small cave can be visited at most twice, and the remaining small caves can be visited at most once. However, the caves named start and end can only be visited exactly once each: once you leave the start cave, you may not return to it, and once you reach the end cave, the path must end immediately.
+
+// Now, the 36 possible paths through the first example above are:
+
+// start,A,b,A,b,A,c,A,end
+// start,A,b,A,b,A,end
+// start,A,b,A,b,end
+// start,A,b,A,c,A,b,A,end
+// start,A,b,A,c,A,b,end
+// start,A,b,A,c,A,c,A,end
+// start,A,b,A,c,A,end
+// start,A,b,A,end
+// start,A,b,d,b,A,c,A,end
+// start,A,b,d,b,A,end
+// start,A,b,d,b,end
+// start,A,b,end
+// start,A,c,A,b,A,b,A,end
+// start,A,c,A,b,A,b,end
+// start,A,c,A,b,A,c,A,end
+// start,A,c,A,b,A,end
+// start,A,c,A,b,d,b,A,end
+// start,A,c,A,b,d,b,end
+// start,A,c,A,b,end
+// start,A,c,A,c,A,b,A,end
+// start,A,c,A,c,A,b,end
+// start,A,c,A,c,A,end
+// start,A,c,A,end
+// start,A,end
+// start,b,A,b,A,c,A,end
+// start,b,A,b,A,end
+// start,b,A,b,end
+// start,b,A,c,A,b,A,end
+// start,b,A,c,A,b,end
+// start,b,A,c,A,c,A,end
+// start,b,A,c,A,end
+// start,b,A,end
+// start,b,d,b,A,c,A,end
+// start,b,d,b,A,end
+// start,b,d,b,end
+// start,b,end
+
+// The slightly larger example above now has 103 paths through it, and the even larger example now has 3509 paths through it.
+
+// Given these new rules, how many paths through this cave system are there?
+
+// Your puzzle answer was 84271.
+
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-const puzzleInput12 =
-// `start-A
-// start-b
-// A-c
-// A-b
-// b-d
-// A-end
-// b-end`
-
-stdinBuffer.toString();
+const puzzleInput12 = stdinBuffer.toString();
 
 interface Edge {
     from: string,
@@ -130,7 +172,6 @@ puzzleInputArray12.forEach(edge => {
 })
 
 const verticesList: VertexDictionary = {};
-const pathsToEnd: Array<Array<string>> = [];
 
 graphEdges.forEach(edge => {
     if(!verticesList[edge.from]) {
@@ -145,49 +186,70 @@ graphEdges.forEach(edge => {
 
 console.log(verticesList)
 
-function checkNeighboringVertices(vertex: string, pastTrace: Array<string>, pastVisited: Array<string>) {
+function checkNeighboringVertices(vertex: string, pastTrace: Array<string>, pastVisitedSmall: Array<string>, pathsToEnd: Array<Array<string>>) {
     const trace: Array<string> = Array.from(pastTrace);
     trace.push(vertex);
-    console.log("Trace: ", trace);
 
     if(vertex === "end") {
-        console.log("Pushed path: ", trace);
         pathsToEnd.push(trace);
         return;
     }
 
-    const visited: Array<string> = Array.from(pastVisited);
+    const visitedSmall: Array<string> = Array.from(pastVisitedSmall);
 
     if(vertex.charCodeAt(0) > 96) {
-        visited.push(vertex);
+        visitedSmall.push(vertex);
     }
-    const vertexStack: Array<string> = [];
 
-    verticesList[vertex].forEach( neighbor => {
-        if(neighbor !== "start") {
-            vertexStack.push(neighbor);
-            console.log("Pushed: ", neighbor);
+    verticesList[vertex].forEach( neighbor => {   
+        if(!visitedSmall.includes(neighbor)) {
+            checkNeighboringVertices(neighbor, trace, visitedSmall, pathsToEnd);
+        }
+    });
+}
+
+function checkNeighboringVerticesOneSmallCaveTwice(vertex: string, pastTrace: Array<string>, pastVisitedSmall: Array<string>, pastVisitedSmallTwice: Array<string>, pathsToEnd: Array<Array<string>>) {
+    const trace: Array<string> = Array.from(pastTrace);
+    trace.push(vertex);
+
+    if(vertex === "end") {
+        pathsToEnd.push(trace);
+        return;
+    }
+
+    const visitedSmall: Array<string> = Array.from(pastVisitedSmall);
+    const visitedSmallTwice = Array.from(pastVisitedSmallTwice);
+
+    if(vertex.charCodeAt(0) > 96) {
+        if(visitedSmall.includes(vertex)) {
+            visitedSmallTwice.push(vertex);
+        }
+        else {
+            visitedSmall.push(vertex);
+        }
+    }
+    verticesList[vertex].forEach( neighbor => {   
+        if(neighbor !== "start" && (!visitedSmall.includes(neighbor) || 
+        (visitedSmall.includes(neighbor) && visitedSmallTwice.length === 0))){
+            checkNeighboringVerticesOneSmallCaveTwice(neighbor, trace, visitedSmall, visitedSmallTwice, pathsToEnd);
         }
     })
-
-    console.log("Stack: ", vertexStack);
-
-    while(vertexStack.length > 0) {    
-        const next = vertexStack.pop();
-        console.log("Popped: ", next)
-        if(next && !visited.includes(next)) {
-            console.log(next, " is visited: ", pastTrace.includes(next));
-            checkNeighboringVertices(next, trace, visited);
-            console.log("CHar code of ", next, "Is: ", next.charCodeAt(0))
-        }
-    }
 }
 
 
 
 function partOne12(): void {
-    checkNeighboringVertices("start", [], []);
-    console.log("Found paths: ", pathsToEnd, "Paths in total: ", pathsToEnd.length);
+    const pathsToEnd: Array<Array<string>> = [];
+    checkNeighboringVertices("start", [], [], pathsToEnd);
+    console.log("Visit small caves only once, paths in total: ", pathsToEnd.length);
 }
 
+function partTwo12(): void {
+    const pathsToEnd: Array<Array<string>> = [];
+    checkNeighboringVerticesOneSmallCaveTwice("start", [], [], [], pathsToEnd);
+    console.log("Visit one small cave twice, paths in total: ", pathsToEnd.length);
+}
+
+
 partOne12();
+partTwo12();
