@@ -1,7 +1,5 @@
 // --- Day 13: Transparent Origami ---
 
-import console from "console";
-
 // You reach another volcanically active part of the cave. It would be nice if you could do some kind of thermal imaging so you could tell ahead of time which caves are too hot to safely enter.
 
 // Fortunately, the submarine seems to be equipped with a thermal camera! When you activate it, you are greeted with:
@@ -111,39 +109,20 @@ import console from "console";
 
 // How many dots are visible after completing just the first fold instruction on your transparent paper?
 
+// Your puzzle answer was 775.
+
+// --- Part Two ---
+
+// Finish folding the transparent paper according to the instructions. The manual says the code is always eight capital letters.
+
+// What code do you use to activate the infrared thermal imaging camera system?
+
+// Your puzzle answer was REUPUPKR.
+
 
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-const puzzleInput13 = 
-// `2,4
-// 0,3
-
-// fold along y=2
-// fold along x=1`
-
-// `6,10
-// 0,14
-// 9,10
-// 0,3
-// 10,4
-// 4,11
-// 6,0
-// 6,12
-// 4,1
-// 0,13
-// 10,12
-// 3,4
-// 3,0
-// 8,4
-// 1,10
-// 2,14
-// 8,10
-// 9,0
-
-// fold along y=7
-// fold along x=5`
-
-stdinBuffer.toString();
+const puzzleInput13 = stdinBuffer.toString();
 
 interface Dot {
     x: number,
@@ -158,18 +137,18 @@ stdinBuffer.toString();
 const puzzleInputArray13: Array<string> = puzzleInput13.split('\n').map(String);
 const dotsLocationArray: Array<Dot> = [];
 const instructionsArray: Array<Instruction> = [];
-let arrayHeight = -1;
-let arrayWidth = -1;
+let startingArrayHeight = -1;
+let startingArrayWidth = -1;
 
-puzzleInputArray13.filter(row=>row).forEach(row => {
+puzzleInputArray13.filter(row => row).forEach( row => {
     if (row.charCodeAt(0) < 58) {
         const [x, y] = row.split(',');
         const xNumber = parseInt(x);
         const yNumber = parseInt(y);
         dotsLocationArray.push({x: xNumber, y: yNumber})
 
-        arrayHeight = yNumber > arrayHeight ? yNumber + 1: arrayHeight;
-        arrayWidth = xNumber > arrayWidth ? xNumber + 1: arrayWidth;
+        startingArrayHeight = yNumber > startingArrayHeight ? yNumber + 1: startingArrayHeight;
+        startingArrayWidth = xNumber > startingArrayWidth ? xNumber + 1: startingArrayWidth;
     }
     else {
         const [text, direction, location] = row.split(/fold\salong\s|=/);
@@ -184,9 +163,9 @@ puzzleInputArray13.filter(row=>row).forEach(row => {
 
 const dotsArray: Array<Array<string>> = [];
 
-for(let rowIndex = 0; rowIndex <= arrayHeight; rowIndex ++) {
+for(let rowIndex = 0; rowIndex < startingArrayHeight; rowIndex ++) {
     const row: Array<string> = []
-    for(let columnIndex = 0; columnIndex <= arrayWidth; columnIndex++) {
+    for(let columnIndex = 0; columnIndex < startingArrayWidth; columnIndex++) {
         row.push(".");
     }
     dotsArray.push(row);
@@ -195,33 +174,32 @@ for(let rowIndex = 0; rowIndex <= arrayHeight; rowIndex ++) {
 
 console.log("Dots array; ", dotsLocationArray);
 console.log("Instructions array: ", instructionsArray);
-console.log("Starting Array height: ", arrayHeight, " Array width: ", arrayWidth);
+console.log("Starting Array height: ", startingArrayHeight, " Array width: ", startingArrayWidth);
 
 dotsLocationArray.forEach(dotLocation => {
     dotsArray[dotLocation.y][dotLocation.x] = "*";
 })
 
-dotsArray.forEach( row => {
-    console.log(...row);
-})
-console.log("-------------------");
 
 function foldPaper(paper: Array<Array<string>>, foldTimes: number) {
     for(let instructionIndex = 0; instructionIndex < foldTimes; instructionIndex++) {
         for(let rowIndex = 0; rowIndex < paper.length; rowIndex++) {
             for(let columnIndex = 0; columnIndex < paper[rowIndex].length; columnIndex++) {
                 if(instructionsArray[instructionIndex].foldUp && rowIndex > instructionsArray[instructionIndex].foldUp && paper[rowIndex][columnIndex] === "*") {
-                    console.log("FOLD UP")
                     paper[(instructionsArray[instructionIndex].foldUp - (rowIndex - instructionsArray[instructionIndex].foldUp))][columnIndex] = "*";
-                    paper[rowIndex][columnIndex] = ".";
                 }
-                if(instructionsArray[instructionIndex].foldLeft && columnIndex > instructionsArray[instructionIndex].foldLeft && paper[rowIndex][columnIndex] === "*") {
-                    console.log("FOLD LEFT")
-                    
-                    paper[rowIndex][(instructionsArray[instructionIndex].foldLeft - (columnIndex - instructionsArray[instructionIndex].foldLeft))] = "*" ;
-                    paper[rowIndex][columnIndex] = ".";            
+                else if(instructionsArray[instructionIndex].foldLeft && columnIndex > instructionsArray[instructionIndex].foldLeft && paper[rowIndex][columnIndex] === "*") {
+                    paper[rowIndex][(instructionsArray[instructionIndex].foldLeft - (columnIndex - instructionsArray[instructionIndex].foldLeft))] = "*" ;           
                 }
             }
+        }
+        if(instructionsArray[instructionIndex].foldUp) {
+            paper.length = instructionsArray[instructionIndex].foldUp;
+        }
+        else if (instructionsArray[instructionIndex].foldLeft) {
+            paper.forEach(row => {
+                row.length = instructionsArray[instructionIndex].foldLeft;
+            });
         }
     }
 }
@@ -233,23 +211,17 @@ function partOne13():void {
         dotsArrayCopy.push(Array.from(row));
     });
 
-
     foldPaper(dotsArrayCopy, 1);
-    console.log("Array height: ", arrayHeight, " Array width: ", arrayWidth);
-        
-    dotsArray.forEach( row => {
-        console.log(...row);
-    });
 
     let count = 0;
-    for(let rowIndex = 0; rowIndex < dotsArray.length; rowIndex++) {
-        for(let columnIndex = 0; columnIndex < dotsArray[rowIndex].length; columnIndex++) {
+    for(let rowIndex = 0; rowIndex < dotsArrayCopy.length; rowIndex++) {
+        for(let columnIndex = 0; columnIndex < dotsArrayCopy[rowIndex].length; columnIndex++) {
             if(dotsArrayCopy[rowIndex][columnIndex] === "*") {
                 count++;
             }
         }
     }
-    console.log("Dots: ", count)
+    console.log("Dots after first fold: ", count)
 }
 
 function partTwo13():void {
@@ -261,10 +233,11 @@ function partTwo13():void {
 
     foldPaper(dotsArrayCopy, instructionsArray.length);
 
-    dotsArray.forEach(row => {
+    console.log("Code for Part 2: ");
+    dotsArrayCopy.forEach(row => {
         console.log(...row);
     });
 }
 
 partOne13();
-//partTwo13();
+partTwo13();
