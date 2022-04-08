@@ -51,38 +51,24 @@
 
 // Apply 10 steps of pair insertion to the polymer template and find the most and least common elements in the result. What do you get if you take the quantity of the most common element and subtract the quantity of the least common element?
 
+// Your puzzle answer was 2745.
 
+// --- Part Two ---
 
+// The resulting polymer isn't nearly strong enough to reinforce the submarine. You'll need to run more steps of the pair insertion process; a total of 40 steps should do it.
 
+// In the above example, the most common element is B (occurring 2192039569602 times) and the least common element is H (occurring 3849876073 times); subtracting these produces 2188189693529.
+
+// Apply 40 steps of pair insertion to the polymer template and find the most and least common elements in the result. What do you get if you take the quantity of the most common element and subtract the quantity of the least common element?
+
+// Your puzzle answer was 3420801168962.
 
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-const puzzleInput14 = 
-
-// `NNCB
-
-// CH -> B
-// HH -> N
-// CB -> H
-// NH -> C
-// HB -> C
-// HC -> B
-// HN -> C
-// NN -> C
-// BH -> H
-// NC -> B
-// NB -> B
-// BN -> B
-// BB -> N
-// BC -> B
-// CC -> N
-// CN -> C`
-
-stdinBuffer.toString();
-
+const puzzleInput14 = stdinBuffer.toString();
 
 const puzzleInputArray14: Array<string> = puzzleInput14.split('\n').map(String);
-const [polymerTemplate, blankSpace, ... insertionRules ] = puzzleInputArray14; 
+const [polymerTemplate, blankSpace, ... insertionRules]: Array<string> = puzzleInputArray14; 
 
 interface InsertionRule {
     pair: string,
@@ -92,7 +78,9 @@ interface ElementCountDict {
     [element: string]: number
 }
 
-//console.log(polymerTemplate)
+interface PairCountDict {
+    [pair: string]: number
+}
 
 const insertionRulesArray: Array<InsertionRule> = [];
 
@@ -101,21 +89,15 @@ insertionRules.forEach(rule => {
     insertionRulesArray.push({pair: pair, insert: insert});
 })
 
-//console.log(insertionRulesArray);
-
-function polymerInsertion(polymer: string): string {
-    //console.log("called")
+function polymerInsertionBruteForce(polymer: string): string {
     let polymerAfterInsertions = polymer;
     let offset = 0;
     for(let start = 0; start < polymer.length-1; start++) {
         const pair = polymer.substring(start, start+2);
         
-        //console.log(pair);
         insertionRulesArray.forEach(rule => {
             if(pair === rule.pair) {
-                //console.log("First half: ", polymerAfterInsertions.slice(0, start+1+offset), " Insert: ", rule.insert, " Second half: ", polymerAfterInsertions.slice(start+1+offset))
                 polymerAfterInsertions = polymerAfterInsertions.slice(0, start+1+offset) + rule.insert + polymerAfterInsertions.slice(start+1+offset);
-                //console.log("Polymer after insertion: ", polymerAfterInsertions)
                 offset++;
             }
         })
@@ -124,19 +106,46 @@ function polymerInsertion(polymer: string): string {
     return polymerAfterInsertions;
 }
 
-function partOne14(): void {
+function polymerInsertionTrackPairs(pairCounts: PairCountDict) {
+        const changesToPairCounts: PairCountDict = {};
+      
+    for (const pair in pairCounts) {
+        insertionRulesArray.forEach(rule => {
+            if(pair === rule.pair) {
+                const leftPair = pair.substring(0, 1) + rule.insert;
+                const rightPair = rule.insert + pair.substring(1, 2);  
+                
+                if(!changesToPairCounts[leftPair]) {
+                    changesToPairCounts[leftPair] = 0;
+                }
 
+                if(!changesToPairCounts[rightPair]) {
+                    changesToPairCounts[rightPair] = 0;
+                }
+                
+                changesToPairCounts[rightPair] += pairCounts[pair];
+                changesToPairCounts[leftPair] += pairCounts[pair];
+                pairCounts[pair] = 0;
+            }
+        })
+    }
+    
+    for(const pair in changesToPairCounts) {
+        pairCounts[pair] = changesToPairCounts[pair];
+    }
+    
+    return pairCounts;
+}
+
+function partOne14(): void {
+    console.time('NOT efficient, 10 iterations');
     let polymerTemplateCopy = polymerTemplate;
     const elementCounts: ElementCountDict = {};
 
 
     for(let step = 0; step < 10; step++) {
-        polymerTemplateCopy = polymerInsertion(polymerTemplateCopy);
-        //console.log("After ", step, " steps: ",  polymerTemplateCopy)
+        polymerTemplateCopy = polymerInsertionBruteForce(polymerTemplateCopy);
     }
-    
-
-    //console.log("After insertion: ", polymerTemplateCopy)
 
     for(let elementIndex = 0; elementIndex < polymerTemplateCopy.length; elementIndex++) {
        const element = polymerTemplateCopy[elementIndex];
@@ -158,8 +167,64 @@ function partOne14(): void {
         }
     }
 
-
-    console.log("Most common element count - least common element count: ", mostCommonElementCount - leastCommonElementCount);
+    console.log("Most common element count minus least common element count after 10 iterations: ", mostCommonElementCount - leastCommonElementCount);
+    console.timeEnd('NOT efficient, 10 iterations');
 }
-console.log("Done! Sorry for keeping you waiting...");
+
+function partTwo14(): void {
+    console.time('Efficient, 40 iterations');
+    const elementCounts: ElementCountDict = {};
+    let pairCounts: PairCountDict = {};
+
+    for(let start = 0; start < polymerTemplate.length-1; start++) {
+        if(!pairCounts[polymerTemplate.substring(start, start+2)]) {
+            pairCounts[polymerTemplate.substring(start, start+2)] = 0;
+        }
+        
+        pairCounts[polymerTemplate.substring(start, start+2)]++;
+    }
+
+    for(let step = 0; step < 40; step++) {
+        pairCounts = polymerInsertionTrackPairs(pairCounts);
+    }
+
+    for (const pair in pairCounts) {
+        if(pairCounts[pair] > 0) {
+            const leftElement = pair.substring(0, 1);
+            const rightElement = pair.substring(1, 2);
+            
+            if(!elementCounts[leftElement]) {
+                elementCounts[leftElement] = 0;
+            }
+            if(!elementCounts[rightElement]) {
+                elementCounts[rightElement] = 0;
+            }
+
+            elementCounts[leftElement] += pairCounts[pair]/2;
+            elementCounts[rightElement] += pairCounts[pair]/2;
+        }
+    }
+
+    //Rounding up the counts for the first and last element in the polymer template
+    elementCounts[polymerTemplate[0]] = Math.ceil(elementCounts[polymerTemplate[0]]);
+    elementCounts[polymerTemplate[polymerTemplate.length-1]] = Math.ceil(elementCounts[polymerTemplate[polymerTemplate.length-1]]);
+
+    let leastCommonElementCount = Number.POSITIVE_INFINITY;
+    let mostCommonElementCount = Number.NEGATIVE_INFINITY;
+
+    for (const element in elementCounts) {
+        if(elementCounts[element] > mostCommonElementCount) {
+            mostCommonElementCount = elementCounts[element];
+        }
+        if(elementCounts[element] < leastCommonElementCount) {
+            leastCommonElementCount = elementCounts[element]
+        }
+    }
+
+    console.log("Most common element count minus least common element count after 40 iterations: ", mostCommonElementCount - leastCommonElementCount);
+    console.timeEnd('Efficient, 40 iterations');
+}
+
 partOne14();
+partTwo14();
+
