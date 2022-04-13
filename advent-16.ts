@@ -1,7 +1,5 @@
 // --- Day 16: Packet Decoder ---
 
-import { version } from "os";
-
 // As you leave the cave and reach open waters, you receive a transmission from the Elves back on the ship.
 
 // The transmission was sent using the Buoyancy Interchange Transmission System (BITS), a method of packing numeric expressions into a binary sequence. Your submarine's computer has saved the transmission in hexadecimal (your puzzle input).
@@ -94,20 +92,46 @@ import { version } from "os";
 
 // Decode the structure of your hexadecimal-encoded BITS transmission; what do you get if you add up the version numbers in all packets?
 
+// Your puzzle answer was 871.
+
+// --- Part Two ---
+
+// Now that you have the structure of your transmission decoded, you can calculate the value of the expression it represents.
+
+// Literal values (type ID 4) represent a single number as described above. The remaining type IDs are more interesting:
+
+//     Packets with type ID 0 are sum packets - their value is the sum of the values of their sub-packets. If they only have a single sub-packet, their value is the value of the sub-packet.
+//     Packets with type ID 1 are product packets - their value is the result of multiplying together the values of their sub-packets. If they only have a single sub-packet, their value is the value of the sub-packet.
+//     Packets with type ID 2 are minimum packets - their value is the minimum of the values of their sub-packets.
+//     Packets with type ID 3 are maximum packets - their value is the maximum of the values of their sub-packets.
+//     Packets with type ID 5 are greater than packets - their value is 1 if the value of the first sub-packet is greater than the value of the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+//     Packets with type ID 6 are less than packets - their value is 1 if the value of the first sub-packet is less than the value of the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+//     Packets with type ID 7 are equal to packets - their value is 1 if the value of the first sub-packet is equal to the value of the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+
+// Using these rules, you can now work out the value of the outermost packet in your BITS transmission.
+
+// For example:
+
+//     C200B40A82 finds the sum of 1 and 2, resulting in the value 3.
+//     04005AC33890 finds the product of 6 and 9, resulting in the value 54.
+//     880086C3E88112 finds the minimum of 7, 8, and 9, resulting in the value 7.
+//     CE00C43D881120 finds the maximum of 7, 8, and 9, resulting in the value 9.
+//     D8005AC2A8F0 produces 1, because 5 is less than 15.
+//     F600BC2D8F produces 0, because 5 is not greater than 15.
+//     9C005AC2F8F0 produces 0, because 5 is not equal to 15.
+//     9C0141080250320F1802104A08 produces 1, because 1 + 3 = 2 * 2.
+
+// What do you get if you evaluate the expression represented by your hexadecimal-encoded BITS transmission?
+
+// Your puzzle answer was 68703010504.
+
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-const puzzleInput16 = 
-//`D2FE28D2FE28D2FE28`
-// '38006F45291200'
-//'EE00D40C823060'
-
-stdinBuffer.toString();
-
+const puzzleInput16 = stdinBuffer.toString();
 
 const binaryTransmission = hex2bin(puzzleInput16);
 
-//console.log(puzzleInputArray16Binary);
-
+//Function copied from Stack Overflow user 'Nick Ivanov's' answer in this thread: https://stackoverflow.com/questions/45053624/convert-hex-to-binary-in-javascript
 function hex2bin(hex: string){
     hex = hex.replace("0x", "").toLowerCase();
     var out = "";
@@ -135,68 +159,8 @@ function hex2bin(hex: string){
     return out;
 }
 
-let packetVersionSum = 0;
-function parsePacket(binaryTransmission: string, numberOfSubPackages?: number): string {
-    let literalValue = "";
-
-    
-
-    //Disregard trailing zeros by parsing?
-    while(parseInt(binaryTransmission, 2)) {
-        console.log("Binary transmission is now: ", binaryTransmission);
-        console.log("Literal value: ", literalValue);
-        const packetVersion = binaryTransmission.substring(0, 3);
-        packetVersionSum += parseInt(packetVersion, 2)
-        
-        const typeId = binaryTransmission.substring(3,6);
-        if(typeId === "100") {
-            console.log("literal value checking in: ", binaryTransmission);
-            
-            let bitsStartIndex = 6; 
-            let keepGoing = true;
-
-            while (keepGoing === true){
-                keepGoing = binaryTransmission.substring(bitsStartIndex, bitsStartIndex+1) === "1" ? true: false;
-                literalValue += binaryTransmission.substring(bitsStartIndex+1, bitsStartIndex+5)
-                console.log("Found these bits: ", binaryTransmission.substring(bitsStartIndex+1, bitsStartIndex+5))
-                bitsStartIndex += 5;
-            }
-                                                                    //WHY 3????
-            binaryTransmission = binaryTransmission.substring(bitsStartIndex+3);
-        }
-        else {
-            console.log("operator on: ", binaryTransmission);
-            const lengthTypeId = binaryTransmission.substring(6, 7);
-            if(lengthTypeId === "0") {
-                const bitsInPackage = parseInt(binaryTransmission.substring(7, 22), 2);
-                console.log("Bits in package: ", bitsInPackage)
-
-                wait(500);
-
-                literalValue = parsePacket(binaryTransmission.substring(22, 22 + bitsInPackage))
-                binaryTransmission = binaryTransmission.substring(22 + bitsInPackage);
-            }
-            else if(lengthTypeId === "1"){
-                console.log("IMPLEMENTING...");
-                
-                const numberOfSubPackages = parseInt(binaryTransmission.substring(7, 18), 2)
-                console.log("Number of subpackages: ", numberOfSubPackages);
-                
-                
-                
-                
-                wait(1000);
-            }
-            else {
-                console.error("Invalid lengthTypeId. How did this get here?: ", lengthTypeId);
-            }
-        }         
-    }
-    return literalValue;
-} 
-
-//Based on the very neat Python solution by reddit user 'ai_prof': https://tinyurl.com/2p95yc2v
-function copyProSolutionPartOne(startIndex: number): Array<number> {
+//Based on the very neat Python solution by reddit user 'ai_prof'/ GitHub user 'topaz'. Solution: https://tinyurl.com/2p95yc2v GitHub: https://github.com/topaz
+function topazDecoderTypeScriptPartOne(startIndex: number): Array<number> {
     let index = startIndex;
     let versionSum = parseInt(binaryTransmission.substring(index, index+3), 2);
     let packetTypeId = parseInt(binaryTransmission.substring(index+3, index+6), 2);
@@ -217,7 +181,7 @@ function copyProSolutionPartOne(startIndex: number): Array<number> {
 
             while(index < endIndex) {
                 let versionValue = 0;
-                [index, versionValue] = copyProSolutionPartOne(index);
+                [index, versionValue] = topazDecoderTypeScriptPartOne(index);
                 versionSum += versionValue;
             }
         }
@@ -226,34 +190,91 @@ function copyProSolutionPartOne(startIndex: number): Array<number> {
             index += 12;
             for( let subpacket = 0; subpacket < numberOfSubPackages; subpacket++) {
                 let versionValue = 0;
-                [index, versionValue] = copyProSolutionPartOne(index);
+                [index, versionValue] = topazDecoderTypeScriptPartOne(index);
                 versionSum += versionValue;
             }
         }
     }
-
     return [index, versionSum];
 }
 
+//Developed independently from part one solution
+function topazDecoderTypeScriptPartTwo(startIndex: number): Array<number> {
+    let index = startIndex;
+    let valueSum = 0;
+    let packetTypeId = parseInt(binaryTransmission.substring(index+3, index+6), 2);
+    index += 6;
 
+    if(packetTypeId === 4) {
+        let literalValueString = "";
+        while (true) {
+            literalValueString += binaryTransmission.substring(index+1, index+5);
+            index += 5;
+            if(binaryTransmission[index-5] === '0') {
+                break;
+            }
+        }
+        valueSum += parseInt(literalValueString, 2);
+    }
+    else {
+        const subpackageValuesArray: Array<number> = [];
+        if(binaryTransmission[index] === '0') {
+            let endIndex = index + 16 + parseInt(binaryTransmission.substring(index+1, index+16), 2);
+            index += 16;
+            while(index < endIndex) {
+                let subpackageValue = 0;
+                [index, subpackageValue] = topazDecoderTypeScriptPartTwo(index);
+                subpackageValuesArray.push(subpackageValue);
+            }
+        }
+        else {
+            const numberOfSubPackages = parseInt(binaryTransmission.substring(index+1, index+12), 2);
+            index += 12;
+            for( let subpacket = 0; subpacket < numberOfSubPackages; subpacket++) {
+                let subpackageValue = 0;
+                [index, subpackageValue] = topazDecoderTypeScriptPartTwo(index);
+                subpackageValuesArray.push(subpackageValue);
+            }
+        }
+        switch (packetTypeId) {
+            case(0):
+                valueSum += subpackageValuesArray.reduce((a, b) => a+b);
+                break;
+            case(1):
+                valueSum += subpackageValuesArray.reduce((a, b) => a*b);
+                break;
+            case(2):
+                valueSum += Math.min(...subpackageValuesArray);
+                break;
+            case(3):
+                valueSum += Math.max(...subpackageValuesArray);
+                break;
+            case(5):
+                valueSum += subpackageValuesArray[0] > subpackageValuesArray[1] ? 1 : 0;
+                break;
+            case(6):
+                valueSum += subpackageValuesArray[0] < subpackageValuesArray[1] ? 1 : 0;
+                break;
+            case(7):
+                valueSum += subpackageValuesArray[0] === subpackageValuesArray[1] ? 1 : 0;
+                break;
+            default:
+                console.error("Packet type ID should be in range 0-7 ", packetTypeId);
+        }
+    }
+
+    return [index, valueSum];
+}
 
 function partOne16() {
-    console.log("Start ----------------)--------)--------)--------)--------)--------)--------)--------)--------)");
-    //let binaryTransmission = puzzleInputArray16Binary;
-    //const transmissionValue = parsePacket(binaryTransmission);
-    //console.log("Value of transmission is: ", parseInt(transmissionValue, 2));
-    //console.log("Sum of version numbers: ", packetVersionSum)
+    const finalVersionSum = topazDecoderTypeScriptPartOne(0)[1];
+    console.log("The sum of all version numbers is: ", finalVersionSum)
+}
 
-    const finalVersionSum = copyProSolutionPartOne(0)[1];
-    console.log(finalVersionSum)
+function partTwo16():void {
+    const finalValueSum = topazDecoderTypeScriptPartTwo(0)[1]
+    console.log("The sum of all package values is: ", finalValueSum);
 }
 
 partOne16();
-
-function wait(ms: number){
-    var start = new Date().getTime();
-    var end = start;
-    while(end < start + ms) {
-      end = new Date().getTime();
-   }
- }
+partTwo16();
