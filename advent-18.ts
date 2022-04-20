@@ -161,7 +161,36 @@
 
 // Add up all of the snailfish numbers from the homework assignment in the order they appear. What is the magnitude of the final sum?
 
-//Solution to Advent of Code 2021 Day 18 adapted to TypeScript from Vanilla JS solution by GitHub user sk1talets: https://github.com/sk1talets/advent-of-code/blob/main/2021/18/script.js
+// Your puzzle answer was 3665.
+
+// --- Part Two ---
+
+// You notice a second question on the back of the homework assignment:
+
+// What is the largest magnitude you can get from adding only two of the snailfish numbers?
+
+// Note that snailfish addition is not commutative - that is, x + y and y + x can produce different results.
+
+// Again considering the last example homework assignment above:
+
+// [[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]
+// [[[5,[2,8]],4],[5,[[9,9],0]]]
+// [6,[[[6,2],[5,6]],[[7,6],[4,7]]]]
+// [[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]
+// [[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]
+// [[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]
+// [[[[5,4],[7,7]],8],[[8,3],8]]
+// [[9,3],[[9,9],[6,[4,9]]]]
+// [[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]
+// [[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]
+
+// The largest magnitude of the sum of any two snailfish numbers in this list is 3993. This is the magnitude of [[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]] + [[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]], which reduces to [[[[7,8],[6,6]],[[6,0],[7,7]]],[[[7,8],[8,8]],[[7,9],[0,6]]]].
+
+// What is the largest magnitude of any sum of two different snailfish numbers from the homework assignment?
+
+// Your puzzle answer was 4775.
+
+//Solutions to Advent of Code 2021 Day 18 adapted to TypeScript from Vanilla JS solution by GitHub user sk1talets: https://github.com/sk1talets/advent-of-code/blob/main/2021/18/script.js
 
 interface SnailfishNumber {
     parent: SnailfishNumber | null;
@@ -169,26 +198,9 @@ interface SnailfishNumber {
     right?: number | SnailfishNumber;
 }
 
-
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
-const puzzleInput18 = 
-// `[1,[5,5]]
-// [2,2]
-// [3,3]
-// [4,[6,6]]`
-
-// [
-//     [
-//         [
-//             [1,1],[2,2]
-//         ],[3,3]
-//     ],[4,4]
-// ]
-
-
-
-stdinBuffer.toString();
+const puzzleInput18 = stdinBuffer.toString();
 
 const puzzleInputArray18 = puzzleInput18.split('\n').map(String);
 const snailfishNumberArrays: Array<any> = [];
@@ -198,7 +210,6 @@ puzzleInputArray18.forEach((array: any) => {
     snailfishNumberArrays.push(parsed)
 });
 
-console.log(snailfishNumberArrays)
 
 function getSFTree(snailfishNumberArray: Array<any>, parent: SnailfishNumber | null = null, SFTree: Array<SnailfishNumber> = []) {
     const snailfishNumber: SnailfishNumber = {parent: parent};
@@ -222,13 +233,11 @@ function addSnailfishNumbers(tree1: Array<SnailfishNumber>, tree2: Array<Snailfi
     tree2[0].parent = newParent;
     
     return reduce([newParent, ... tree1, ... tree2]);
-
-    //return [newParent, ... tree1, ... tree2]
 }
 
 function reduce(snailfishSum: Array<SnailfishNumber>): Array<SnailfishNumber> {
     while(true) {
-        if(!explode(snailfishSum) as boolean/* && !split(snailfishSum)*/) {
+        if(!explode(snailfishSum) as boolean && !split(snailfishSum)) {
             break;
         }
     }
@@ -256,7 +265,6 @@ function explode(node: SnailfishNumber | Array<SnailfishNumber>, depth = 0): boo
     if (depth >= 4 && parent ) {
         updateLeft(parent, left as number, node);
         updateRight(parent, right as number, node);
-
         parent.left === node ? parent.left = 0 : parent.right = 0;
 
         return true;
@@ -282,7 +290,7 @@ function updateLeft(node: SnailfishNumber | null, value: number, prev?: Snailfis
         return updateLeft(node.left, value);
     }
 
-    if(node.left) node.left += value;
+    if(typeof(node.left) !== "undefined") node.left += value;
 }
 
 function updateRight(node: SnailfishNumber | null, value: number, prev?: SnailfishNumber): void {
@@ -304,43 +312,107 @@ function updateRight(node: SnailfishNumber | null, value: number, prev?: Snailfi
         return updateRight(node.right, value);
     }
 
-    if(node.right)  node.right += value; 
+    if(typeof(node.right) !== "undefined") node.right += value; 
+}
+
+function split(nodes: Array<SnailfishNumber>, node: SnailfishNumber | null = null): boolean {
+    if(!node) {
+        return split(nodes, nodes[0]);
+    }
+
+    const {parent, left, right} = node;
+
+    for(let side of [left, right]) {
+        if(typeof(side) === "object") {
+            const res = split(nodes, side);
+
+            if(res) {
+                return res;
+            }
+        }
+
+        if(typeof(side) === "number" && side >= 10) {
+            let newNode: SnailfishNumber = {
+                parent: node,
+                left: Math.floor(side/2),
+                right: Math.ceil(side/2),
+            };
+
+            side === left ? node.left = newNode : node.right = newNode;
+            nodes.push(newNode);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function getMagnitude(node: SnailfishNumber | Array<SnailfishNumber>): number {
+    if(Array.isArray(node)) {
+        return getMagnitude(node[0])
+    }
+
+    let result = 0;
+
+    for(const side of ['left', 'right']) {
+        const multiplier = side === 'left' ? 3 : 2;
+
+        if (typeof(node[side as keyof SnailfishNumber]) === "object") {
+            result += multiplier * getMagnitude(node[side as keyof SnailfishNumber] as SnailfishNumber)
+        }
+        else {
+            result += multiplier * (node[side as keyof SnailfishNumber] as number);
+        }
+    }
+
+    return result;
+}
+
+function getNumber(node: SnailfishNumber): any {
+	if (!node) {
+		return node;
+	}
+
+	return [
+		typeof node.left === 'object' ? getNumber(node.left) : node.left,
+		typeof node.right === 'object' ? getNumber(node.right) : node.right,
+	]
 }
 
 
 function partOne18(): void {
-    // let sum;
+    let sum;
 
-    //  for (const snailfishNumberArray of snailfishNumberArrays) {
-    //     const SFTree = getSFTree(snailfishNumberArray) as Array<SnailfishNumber>;
+     for (const snailfishNumberArray of snailfishNumberArrays) {
+        const SFTree = getSFTree(snailfishNumberArray) as Array<SnailfishNumber>;
 
-    //     console.log(SFTree);
+        if(!sum) {
+            sum = SFTree;
+            continue;
+        }
 
-    //     if(!sum) {
-    //         sum = SFTree;
-    //         continue;
-    //     }
+        sum = addSnailfishNumbers(sum, SFTree);
+    }
 
-    //     sum = addSnailfishNumbers(sum, SFTree);
-    // }
+    console.log("Total sum magnitude: ", getMagnitude(sum as Array<SnailfishNumber>));
+}
 
-    // console.log("SUM TIME: ", sum);
+function partTwo18() : void {
+    let maxMagnitude = 0;
 
-    const SFTree = getSFTree([[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]) as Array<SnailfishNumber>;
-    console.log("Before explode: ", SFTree);
-    explode(SFTree);
-    explode(SFTree);
-    console.log("After explode: ", SFTree);
+    for(const snailfishNumberArray1 of snailfishNumberArrays) {
+        for (const snailfishNumberArray2 of snailfishNumberArrays) {
+            const magnitude = getMagnitude(addSnailfishNumbers(getSFTree(snailfishNumberArray1) as Array<SnailfishNumber>, getSFTree(snailfishNumberArray2) as Array<SnailfishNumber>))
 
+            if(magnitude > maxMagnitude) {
+                maxMagnitude = magnitude;
+            }
+        }
+    }
 
-    // let snailfishSum = snailfishNumberArrays[0];
-
-    // for(let snailfishNumberIndex = 1; snailfishNumberIndex < snailfishNumberArrays.length; snailfishNumberIndex++) {
-    //     snailfishSum = addSnailfishNumbers(snailfishSum, snailfishNumberArrays[snailfishNumberIndex]);
-    // }
-
-    //console.log(snailfishSum);
+    console.log("Largest magnitude: ", maxMagnitude);
 }
 
 partOne18();
-//explodeNumber();
+partTwo18();
