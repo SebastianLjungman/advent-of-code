@@ -37,68 +37,88 @@
 
 // Play a practice game using the deterministic 100-sided die. The moment either player wins, what do you get if you multiply the score of the losing player by the number of times the die was rolled during the game?
 
+// Your puzzle answer was 853776.
+
+// --- Part Two ---
+
+// Now that you're warmed up, it's time to play the real game.
+
+// A second compartment opens, this time labeled Dirac dice. Out of it falls a single three-sided die.
+
+// As you experiment with the die, you feel a little strange. An informational brochure in the compartment explains that this is a quantum die: when you roll it, the universe splits into multiple copies, one copy for each possible outcome of the die. In this case, rolling the die always splits the universe into three copies: one where the outcome of the roll was 1, one where it was 2, and one where it was 3.
+
+// The game is played the same as before, although to prevent things from getting too far out of hand, the game now ends when either player's score reaches at least 21.
+
+// Using the same starting positions as in the example above, player 1 wins in 444356092776315 universes, while player 2 merely wins in 341960390180808 universes.
+
+// Using your given starting positions, determine every possible outcome. Find the player that wins in more universes; in how many universes does that player win?
+
+// Your puzzle answer was 301304993766094.
+
 var fs = require("fs");
 var stdinBuffer = fs.readFileSync(0); // STDIN_FILENO = 0
 const puzzleInput21 = stdinBuffer.toString();
 
-let [none, player1Pos, player2Pos] = puzzleInput21.split(/Player 1 starting position: |\nPlayer 2 starting position: /)
-player1Pos = parseInt(player1Pos);
-player2Pos = parseInt(player2Pos);
-console.log(player1Pos, "AND", player2Pos)
+let [none, player1PosInput, player2PosInput] = puzzleInput21.split(/Player 1 starting position: |\nPlayer 2 starting position: /)
+player1PosInput = parseInt(player1PosInput);
+player2PosInput = parseInt(player2PosInput);
 
 const deterministicDie = Array.from({length: 100}, (x, i) => i + 1);
-console.log(deterministicDie)
 
-const gameBoard = Array.from({length: 10}, (x, i) => i + 1);
-
-function partOne20(): void {
+function partOne21(): void {
     let dieRolls = 0;
     let dieIndex = 0;
     let player1Score = 0;
     let player2Score = 0;
+    let player1Pos = player1PosInput;
+    let player2Pos = player2PosInput;
 
     while(player1Score < 1000 && player2Score < 1000) {
-        console.log("Player 1 Position before: ", player1Pos);
         let firstRoll = deterministicDie[dieIndex%100];
         let secondRoll = deterministicDie[(dieIndex+1)%100];
         let thirdRoll = deterministicDie[(dieIndex+2)%100];
-        console.log("First roll: ", firstRoll, " Second roll: ", secondRoll, " Third roll: ", thirdRoll)
-
-        player1Pos = 1 + ((player1Pos + firstRoll  + secondRoll + thirdRoll - 1) %10);
-
-        console.log("Player 1 Position after: ", player1Pos);
+        player1Pos = 1 + ((player1Pos + firstRoll  + secondRoll + thirdRoll - 1) % 10);
         
         dieRolls += 3;
         dieIndex = (dieIndex + 3) % 100;
-        console.log("Total die rolls: ", dieRolls, "Die index: ", dieIndex);
-
         player1Score += player1Pos;
-        console.log("Player 1 score after round: ", player1Score)
 
-        console.log("-----------------------")
-
-
-        console.log("Player 2 Position before: ", player2Pos);
         firstRoll = deterministicDie[dieIndex%100];
         secondRoll = deterministicDie[(dieIndex+1)%100];
         thirdRoll = deterministicDie[(dieIndex+2)%100];
-        console.log("First roll: ", firstRoll, " Second roll: ", secondRoll, " Third roll: ", thirdRoll)
-
         player2Pos = 1 + ((player2Pos + firstRoll  + secondRoll + thirdRoll - 1) %10);
 
-        console.log("Player 2 Position after: ", player2Pos);
-        
         dieRolls += 3;
         dieIndex = (dieIndex + 3) % 100;
-        console.log("Total die rolls: ", dieRolls, "Die index: ", dieIndex);
-
         player2Score += player2Pos;
-        console.log("Player 2 score after round: ", player2Score)
-
-        console.log("-----------------------")
     }
 
-    console.log(Math.min(player1Score, player2Score)*dieRolls);
+    console.log("Score of loser multiplied by number of die rolls: ", Math.min(player1Score, player2Score) * dieRolls);
 }
 
-partOne20();
+function partTwo21(): void {
+    let totalWins = ai_prof_recursion(player1PosInput-1, 21, player2PosInput-1, 21);
+    console.log("Most winning universes: ", Math.max(... totalWins));
+}
+
+//[Sum of three dice rolls, frequency of sum]
+const rollFrequency = [[3,1],[4,3],[5,6],[6,7],[7,6],[8,3],[9,1]];
+
+//Based on the very neat Python solution by reddit user 'ai_prof'/ GitHub user 'topaz'. Solution: https://tinyurl.com/y33sncff GitHub: https://github.com/topaz 
+function ai_prof_recursion(p1:number, t1:number, p2:number, t2:number): Array<number> {
+    if (t2 <= 0) {
+        return [0,1]
+    }
+
+    let w1 = 0;
+    let w2 = 0;
+    for (const roll of rollFrequency) {
+        const [c2, c1] = ai_prof_recursion(p2, t2, (p1 + roll[0] % 10), t1 - 1 - ((p1 + roll[0]) % 10) )
+        w1 = w1 + roll[1] * c1, 
+        w2 = w2 + roll[1] * c2;
+    }
+    return [w1, w2];
+}
+
+partOne21();
+partTwo21();
